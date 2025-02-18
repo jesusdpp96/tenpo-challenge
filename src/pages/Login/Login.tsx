@@ -1,9 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import {
   TextField,
   Button,
@@ -13,34 +12,49 @@ import {
   Container,
 } from "@mui/material";
 import { axiosInstance } from "../../api";
-import { setToken } from "../../store/slices/authSlice";
 import { LoginLayout } from "./components";
 import TenpoLogo from "../../assets/tenpo-logo.svg";
 import "./css/Login.css";
+import { useAuth, useFetchAndLoad } from "../../hooks";
+import { loginService } from "../../services";
 
 export const Login: React.FC = () => {
+  const { isAuthenticated, login } = useAuth();
+  const { loading, callEndpoint } = useFetchAndLoad();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Redirigir si ya está autenticado
+    if (isAuthenticated) {
+      navigate("/home");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     try {
-      const response = await axiosInstance.post("https://reqres.in/api/login", {
-        email,
-        password,
-      });
-
+      // Executing login service with fake service
+      const response = await callEndpoint(loginService(email, password));
+      if (response.data.error) {
+        throw new Error(response.data.error);
+      }
       if (response.data.token) {
-        dispatch(setToken(response.data.token));
+        login(response.data.token);
         navigate("/home");
       }
     } catch (error) {
-      setError("Invalid email or password");
+      // if fake API fails, use fake local login
+      if (email === "jesus@reqres.in" && password === "strongpassword") {
+        const fakeToken = "QpwL5tke4Pnpja7X4";
+        login(fakeToken);
+        navigate("/home");
+      } else {
+        setError("Invalid email or password");
+      }
     }
   };
 
@@ -129,14 +143,18 @@ export const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  sx={{ mt: 3, mb: 2 }}
-                >
-                  Sign In
-                </Button>
+                {loading ? (
+                  <>Loading...</>
+                ) : (
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 3, mb: 2 }}
+                  >
+                    Sign In
+                  </Button>
+                )}
                 {error && (
                   <Typography color="error" align="center">
                     {error}

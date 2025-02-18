@@ -7,40 +7,29 @@ import {
 } from "react-router-dom";
 import { Provider } from "react-redux";
 import { ThemeProvider, CssBaseline } from "@mui/material";
-import { store } from "./store";
 import { theme } from "./theme";
 import { PrivateRoute } from "./components";
 import { Login } from "./pages/Login";
 import { Home } from "./pages/Home";
+import { AuthProvider } from "./contexts";
 
 const App: React.FC = () => {
   return (
-    <Provider store={store}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Router>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <AuthProvider>
           <Routes>
-            <Route
-              path="/login"
-              element={
-                <>
-                  <Login />
-                </>
-              }
-            />
-            <Route
-              path="/home"
-              element={
-                <PrivateRoute>
-                  <Home />
-                </PrivateRoute>
-              }
-            />
+            <Route path="/login" element={<Login />} />
+            <Route element={<PrivateRoute />}>
+              <Route path="/home" element={<Home />} />
+              {/* Others privated routes */}
+            </Route>
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
-        </Router>
-      </ThemeProvider>
-    </Provider>
+        </AuthProvider>
+      </Router>
+    </ThemeProvider>
   );
 };
 

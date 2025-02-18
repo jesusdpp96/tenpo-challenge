@@ -12,25 +12,26 @@ import {
   Place as PlaceIcon,
   Palette as PaletteIcon,
 } from "@mui/icons-material";
+import { Artwork } from "../../../models";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ArtCard: React.FC<{ data: any; counter: number }> = ({
+export const ArtCard: React.FC<{ data: Artwork; counter: number }> = ({
   data,
   counter,
 }) => {
   const {
     title,
-    artist_display,
-    date_display,
-    place_of_origin,
-    image_id,
-    medium_display,
-    department_title,
+    artistDisplay,
+    dateDisplay,
+    placeOfOrigin,
+    imageId,
+    mediumDisplay,
+    departmentTitle,
   } = data;
 
   // Format artist display by removing line breaks and "Possibly manufactured by"
   const formattedArtist =
-    artist_display
+    artistDisplay
       ?.replace(/\n/g, " ")
       ?.replace("Possibly manufactured by ", "")
       ?.split(" (")[0] || "Unknown Artist";
@@ -53,15 +54,15 @@ export const ArtCard: React.FC<{ data: any; counter: number }> = ({
         <CardMedia
           component="img"
           height="200"
-          image={`https://www.artic.edu/iiif/2/${image_id}/full/400,/0/default.jpg`}
+          image={`https://www.artic.edu/iiif/2/${imageId}/full/400,/0/default.jpg`}
           alt={title}
           sx={{ objectFit: "cover" }}
         />
         <Chip
           label={
-            department_title?.length > 20
-              ? department_title?.slice(0, 20) + "..."
-              : department_title
+            departmentTitle?.length > 20
+              ? departmentTitle?.slice(0, 20) + "..."
+              : departmentTitle
           }
           sx={{
             position: "absolute",
@@ -122,26 +123,26 @@ export const ArtCard: React.FC<{ data: any; counter: number }> = ({
             </Typography>
           </Box>
 
-          {date_display && (
+          {dateDisplay && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <ScheduleIcon sx={{ fontSize: 20, color: "text.secondary" }} />
               <Typography variant="body2" color="text.secondary">
-                {date_display}
+                {dateDisplay}
               </Typography>
             </Box>
           )}
 
-          {place_of_origin && (
+          {placeOfOrigin && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <PlaceIcon sx={{ fontSize: 20, color: "text.secondary" }} />
               <Typography variant="body2" color="text.secondary">
-                {place_of_origin}
+                {placeOfOrigin}
               </Typography>
             </Box>
           )}
         </Box>
 
-        {medium_display && (
+        {mediumDisplay && (
           <Typography
             variant="body2"
             color="text.secondary"
@@ -154,7 +155,7 @@ export const ArtCard: React.FC<{ data: any; counter: number }> = ({
               overflow: "hidden",
             }}
           >
-            {medium_display}
+            {mediumDisplay}
           </Typography>
         )}
       </CardContent>

@@ -3,41 +3,34 @@
 import type React from "react";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import {
   AppBar,
   Toolbar,
   Typography,
   Button,
   Grid,
-  Card,
-  CardContent,
-  CardMedia,
   Box,
   Container,
 } from "@mui/material";
-import { axiosInstance } from "../../api";
-import { clearToken } from "../../store/slices/authSlice";
 import { LoadingSpinner } from "../../components";
 import { ArtCard, HomeLayout } from "./components";
-
-interface Artwork {
-  id: number;
-  title: string;
-  image_id: string;
-}
+import { useAuth, useFetchAndLoad } from "../../hooks";
+import { articApiService } from "../../services";
+import { Artwork } from "../../models";
+import { createArtworkAdapter } from "../../adapters";
 
 export const Home: React.FC = () => {
+  const { logout } = useAuth();
+  const { loading, callEndpoint } = useFetchAndLoad();
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [loading2, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const observer = useRef<IntersectionObserver | null>(null);
   const lastArtworkElementRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (loading) return;
+      if (loading2) return;
       if (observer.current) observer.current.disconnect();
       observer.current = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting && hasMore) {
@@ -46,17 +39,20 @@ export const Home: React.FC = () => {
       });
       if (node) observer.current.observe(node);
     },
-    [loading, hasMore]
+    [loading2, hasMore]
   );
 
   useEffect(() => {
     const fetchArtworks = async () => {
       setLoading(true);
       try {
-        const response = await axiosInstance.get(
-          `https://api.artic.edu/api/v1/artworks?page=${page}&limit=30`
+        const response = await callEndpoint(articApiService(page));
+        const data = response.data.data || [];
+        const artworks = data.map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (elem: any): Artwork => createArtworkAdapter(elem)
         );
-        setArtworks((prevArtworks) => [...prevArtworks, ...response.data.data]);
+        setArtworks((prevArtworks) => [...prevArtworks, ...artworks]);
         setHasMore(response.data.pagination.total_pages > page);
       } catch (error) {
         console.error("Error fetching artworks:", error);
@@ -69,7 +65,7 @@ export const Home: React.FC = () => {
   }, [page]);
 
   const handleLogout = () => {
-    dispatch(clearToken());
+    logout();
     navigate("/login");
   };
 
@@ -116,7 +112,7 @@ export const Home: React.FC = () => {
               </Grid>
             ))}
           </Grid>
-          {loading && <LoadingSpinner />}
+          {(loading || loading2) && <LoadingSpinner />}
         </Box>
       </Container>
     </HomeLayout>
