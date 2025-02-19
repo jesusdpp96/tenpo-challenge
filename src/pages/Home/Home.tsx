@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { LoadingSpinner } from "../../components";
 import { ArtCard, HomeLayout } from "./components";
-import { useAuth, useFetchAndLoad } from "../../hooks";
+import { useAuth, useFetchAndLoad, useUI } from "../../hooks";
 import { articApiService } from "../../services";
 import { Artwork } from "../../models";
 import { createArtworkAdapter } from "../../adapters";
@@ -22,6 +22,7 @@ import { createArtworkAdapter } from "../../adapters";
 export const Home: React.FC = () => {
   const { logout } = useAuth();
   const { loading, callEndpoint } = useFetchAndLoad();
+  const { showLoading, hideLoading, showError } = useUI();
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [page, setPage] = useState(1);
   const [loading2, setLoading] = useState(false);
@@ -43,6 +44,16 @@ export const Home: React.FC = () => {
   );
 
   useEffect(() => {
+    if (loading) {
+      // show global loading (snackbar)
+      showLoading("loading more artworks...", false);
+    } else {
+      // hide global loading (snackbar)
+      hideLoading();
+    }
+  }, [loading]);
+
+  useEffect(() => {
     const fetchArtworks = async () => {
       setLoading(true);
       try {
@@ -56,6 +67,7 @@ export const Home: React.FC = () => {
         setHasMore(response.data.pagination.total_pages > page);
       } catch (error) {
         console.error("Error fetching artworks:", error);
+        showError("Error fetching artworks");
       } finally {
         setLoading(false);
       }

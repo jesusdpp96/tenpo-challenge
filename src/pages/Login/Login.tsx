@@ -11,16 +11,16 @@ import {
   Grid,
   Container,
 } from "@mui/material";
-import { axiosInstance } from "../../api";
 import { LoginLayout } from "./components";
 import TenpoLogo from "../../assets/tenpo-logo.svg";
 import "./css/Login.css";
-import { useAuth, useFetchAndLoad } from "../../hooks";
+import { useAuth, useFetchAndLoad, useUI } from "../../hooks";
 import { loginService } from "../../services";
 
 export const Login: React.FC = () => {
   const { isAuthenticated, login } = useAuth();
   const { loading, callEndpoint } = useFetchAndLoad();
+  const { showLoading, hideLoading, showError } = useUI();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -32,6 +32,16 @@ export const Login: React.FC = () => {
       navigate("/home");
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (loading) {
+      // show global loading (snackbar)
+      showLoading("Authenticating user...", false);
+    } else {
+      // hide global loading (snackbar)
+      hideLoading();
+    }
+  }, [loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,15 +56,12 @@ export const Login: React.FC = () => {
         login(response.data.token);
         navigate("/home");
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error) {
       // if fake API fails, use fake local login
-      if (email === "jesus@reqres.in" && password === "strongpassword") {
-        const fakeToken = "QpwL5tke4Pnpja7X4";
-        login(fakeToken);
-        navigate("/home");
-      } else {
-        setError("Invalid email or password");
-      }
+      setError("Invalid email or password");
+      // Show global error (snackbar)
+      showError("Invalid email or password");
     }
   };
 
